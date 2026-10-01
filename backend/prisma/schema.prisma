@@ -1,0 +1,124 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Single admin user for now - no roles/multi-user yet, see README.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// Single-tenant: one Business row per deployment. Multi-business support
+// (like myBillBook's account switching) is a documented follow-up, not built yet.
+model Business {
+  id            String   @id @default(cuid())
+  name          String
+  gstin         String?
+  address       String?
+  state         String
+  phone         String?
+  email         String?
+  bankName      String?
+  bankAccount   String?
+  bankIfsc      String?
+  invoicePrefix String   @default("INV")
+  invoiceSeq    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  gstin     String?
+  email     String?
+  phone     String?
+  address   String?
+  state     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
+}
+
+model Item {
+  id            String        @id @default(cuid())
+  name          String
+  hsnCode       String?
+  unit          String        @default("pcs")
+  salePrice     Float
+  purchasePrice Float?
+  gstRate       Float         @default(18)
+  stockQty      Float         @default(0)
+  lowStockAt    Float         @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  invoiceItems  InvoiceItem[]
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  number       String        @unique
+  date         DateTime      @default(now())
+  dueDate      DateTime?
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  status       InvoiceStatus @default(DRAFT)
+  taxableValue Float
+  cgst         Float
+  sgst         Float
+  igst         Float
+  roundOff     Float
+  grandTotal   Float
+  amountPaid   Float         @default(0)
+  notes        String?
+  items        InvoiceItem[]
+  payments     Payment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id           String  @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  itemId       String?
+  item         Item?   @relation(fields: [itemId], references: [id])
+  description  String
+  hsnCode      String?
+  quantity     Float
+  rate         Float
+  discountPct  Float   @default(0)
+  gstRate      Float
+  taxableValue Float
+  cgst         Float
+  sgst         Float
+  igst         Float
+  total        Float
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Float
+  date      DateTime @default(now())
+  mode      String   @default("cash")
+  notes     String?
+  createdAt DateTime @default(now())
+}
