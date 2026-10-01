@@ -14,3 +14,7 @@ nav svg{display:block;margin:0 auto;flex-shrink:0}@media(min-width:900px){nav sv
 
 /* Keep every scrollable screen clear of the measured bottom navigation. */
 @media(max-width:899px){main{padding-bottom:calc(var(--nav-height,80px) + 28px)}#toast{bottom:calc(var(--nav-height,80px) + 12px)}nav{padding-bottom:12px}.keyboard-open main{padding-bottom:28px}.keyboard-open #toast{bottom:20px}}
+
+/* Compact, unframed QR payment block. */
+.invoice-qr{justify-content:flex-start;padding:8px 0}.invoice-qr img{max-width:100%;max-height:144px}.bank-details{border:0;border-top:1px solid #e2e8f0;border-radius:0;padding:12px 0}
+@media(max-width:599px){.actions button{flex:1 1 110px;overflow-wrap:anywhere;padding:12px 14px}}

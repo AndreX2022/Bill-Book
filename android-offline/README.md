@@ -1,6 +1,6 @@
-# BillBook — offline Android edition 1.2
+# BillBook — offline Android edition 1.3
 
-The installable application is `BillBook-1.2.apk`, package `in.billbook.app`.
+The installable application is `BillBook-1.3.apk`, package `in.billbook.app`.
 Android 8.0 or newer is required, with an updated Android System WebView.
 It is a signed release build, not Expo Go and not a renamed ZIP.
 
@@ -12,7 +12,7 @@ edition; the APK does not depend on those components.
 
 ## Upgrade from version 1.0 or 1.1
 
-Export a backup first, then open the version 1.2 APK and choose Update/Install.
+Export a backup first, then open the version 1.3 APK and choose Update/Install.
 The package and signing key are unchanged, so the update can retain app data.
 Do not uninstall the existing app or clear its storage before upgrading. Old records
 and version 1 backups migrate automatically; newly added bank/support fields
@@ -20,7 +20,7 @@ start blank. Existing bills keep their original customer/business snapshots.
 
 ## Install and use
 
-1. Download/open `BillBook-1.2.apk` on your Android phone. If requested,
+1. Download/open `BillBook-1.3.apk` on your Android phone. If requested,
    enable "Allow from this source" for the app opening the downloaded APK.
 2. Open BillBook. In Settings, verify issuer name, phone, email, address,
    state, UPI ID and (if applicable) GSTIN.
@@ -51,7 +51,7 @@ start blank. Existing bills keep their original customer/business snapshots.
    data after confirmation. Data does not sync to your Replit app or other
    devices. Uninstalling or clearing app storage deletes the local records.
 
-## New in 1.2
+## New in 1.3
 
 - Customer import from the Android phone-number picker, with review before Save
 - Direct PDF attachment sharing from each bill via Android's share sheet
@@ -121,7 +121,7 @@ The keystore alias is `billbook`. Set `BILLBOOK_BUILD_TOOLS` if your SDK's
 build-tools path differs. If only a JRE is available, place Eclipse ECJ
 3.33.0 at `$BILLBOOK_SDK/ecj.jar`; the build script uses it automatically.
 The companion private signing archive retains the signing key/password for
-future app updates. Version 1.2 reuses the version 1.0 signing key. Keep that archive private and preserve the same signing
+future app updates. Version 1.3 reuses the version 1.0 signing key. Keep that archive private and preserve the same signing
 key/package to install updates without removing the original app. Increment
 `android:versionCode` and `android:versionName` for later releases.
 
@@ -152,3 +152,5 @@ Run DOM tests after installing local test dependencies:
 npm install --no-save jsdom@26 fake-indexeddb@6
 node tests/dom.test.cjs
 ```
+
+Version 1.3 adds bill edit/delete management, payment-based bank visibility and a compact adaptive QR. See the root README for behavior and testing limitations.

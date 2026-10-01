@@ -30,6 +30,20 @@ function create(db,input){if(!['BOS','GST'].includes(input.type))throw Error('In
 function status(i){return i.cancelled?'CANCELLED':i.amountPaid>=i.grandTotal?'PAID':i.dueDate&&i.dueDate<date()?'OVERDUE':i.amountPaid>0?'PARTIALLY_PAID':'UNPAID';}
 function payment(i,value,mode){if(i.cancelled)throw Error('Cancelled bills cannot receive payments.');let n=round(amount(value,'Payment',0.01,round(i.grandTotal-i.amountPaid)));if(n<=0)throw Error('Payment must be at least 0.01.');i.amountPaid=round(i.amountPaid+n);i.payments.push({id:id(),amount:n,date:date(),mode:mode||'Cash'});}
 function cancel(db,i){if(i.cancelled)return;if(i.amountPaid>0)throw Error('Bills with payments cannot be cancelled.');i.cancelled=true;for(let l of i.items){let item=db.items.find(x=>x.id===l.itemId);if(item)item.stockQty=roundQty(item.stockQty+l.quantity);}}
+function hasBankPayment(i){return !i.cancelled&&i.payments.some(p=>p.mode==='Bank transfer'&&Number(p.amount)>0);}
+function invoiceBusiness(i){const b={...i.business};if(!hasBankPayment(i))for(const k of ['bankName','accountHolder','bankAccount','bankIfsc','bankBranch'])b[k]='';return b;}
+function update(db,id,input){
+ const old=db.invoices.find(i=>i.id===id);if(!old)throw Error('Bill not found.');if(old.cancelled)throw Error('Cancelled bills cannot be edited.');
+ const next=JSON.parse(JSON.stringify(db));const target=next.invoices.find(i=>i.id===id);
+ for(const l of target.items){const p=next.items.find(p=>p.id===l.itemId);if(p)p.stockQty=roundQty(p.stockQty+l.quantity);}
+ next.business={...old.business,seq:db.business.seq};
+ if(input.customerId===old.customer.id)next.customers=[{...old.customer},...next.customers.filter(c=>c.id!==old.customer.id)];
+ const revised=create(next,{...input,paid:0});if(revised.grandTotal<old.amountPaid)throw Error('Bill total cannot be less than recorded payments.');
+ Object.assign(revised,{id:old.id,number:old.number,business:{...old.business},payments:old.payments.map(p=>({...p})),amountPaid:old.amountPaid,updatedAt:new Date().toISOString()});
+ db.items=next.items;db.invoices[db.invoices.findIndex(i=>i.id===id)]=revised;return revised;
+}
+function removeInvoice(db,id){const i=db.invoices.find(i=>i.id===id);if(!i)throw Error('Bill not found.');if(!i.cancelled)for(const l of i.items){const p=db.items.find(p=>p.id===l.itemId);if(p)p.stockQty=roundQty(p.stockQty+l.quantity);}db.invoices=db.invoices.filter(i=>i.id!==id);}
+function billQrSize(i){const side=Math.max(108,144-Math.max(0,i.items.length-3)*3);return qrSize(i.business.qrWidth,i.business.qrHeight,side,side);}
 function qrSize(width,height,maxWidth=180,maxHeight=180){
  width=amount(width,'QR width',1,20000);height=amount(height,'QR height',1,20000);
  const scale=Math.min(1,maxWidth/width,maxHeight/height);
@@ -52,5 +66,5 @@ function validate(data){if(!data||data.version!==1||!data.business||!Array.isArr
  for(let i of data.invoices){if(typeof i.id!=='string'||typeof i.number!=='string'||!Array.isArray(i.items)||!Array.isArray(i.payments)||!i.customer||!i.business||!['BOS','GST'].includes(i.type))throw Error('Invalid bill.');checkQR(i.business);checkBank(i.business);if(typeof i.customer.name!=='string'||typeof i.customer.state!=='string')throw Error('Invalid customer snapshot.');amount(i.grandTotal,'Total');amount(i.amountPaid,'Paid',0,i.grandTotal);for(let l of i.items){if(typeof l.description!=='string')throw Error('Invalid bill item.');for(let k of ['quantity','rate','gstRate','total'])amount(l[k],k);}}
  for(let list of [data.customers,data.items,data.invoices]){for(let x of list)if(!/^[A-Za-z0-9_-]+$/.test(x.id))throw Error('Invalid record ID.');}for(let list of [data.customers,data.items,data.invoices])if(new Set(list.map(x=>x.id)).size!==list.length)throw Error('Duplicate record IDs.');return data;
 }
-const api={round,roundQty,date,id,initial,amount,totals,create,status,payment,cancel,validate,qrSize,checkBank,checkSupport,migrate};root.BillCore=api;if(typeof module!=='undefined')module.exports=api;
+const api={update,removeInvoice,hasBankPayment,invoiceBusiness,billQrSize,round,roundQty,date,id,initial,amount,totals,create,status,payment,cancel,validate,qrSize,checkBank,checkSupport,migrate};root.BillCore=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);

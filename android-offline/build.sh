@@ -18,5 +18,5 @@ fi
 "$BT/d8" --lib "$JAR" --min-api 26 --output build/dex build/classes.jar
 (cd build/dex && zip -q -u ../unsigned.apk classes.dex)
 "$BT/zipalign" -f 4 build/unsigned.apk build/aligned.apk
-"$BT/apksigner" sign --ks "$BILLBOOK_KEYSTORE" --ks-key-alias billbook --ks-pass env:BILLBOOK_KEY_PASSWORD --key-pass env:BILLBOOK_KEY_PASSWORD --out build/BillBook-1.2.apk build/aligned.apk
-"$BT/apksigner" verify --verbose build/BillBook-1.2.apk
+"$BT/apksigner" sign --ks "$BILLBOOK_KEYSTORE" --ks-key-alias billbook --ks-pass env:BILLBOOK_KEY_PASSWORD --key-pass env:BILLBOOK_KEY_PASSWORD --out build/BillBook-1.3.apk build/aligned.apk
+"$BT/apksigner" verify --verbose build/BillBook-1.3.apk
